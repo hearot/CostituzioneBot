@@ -32,8 +32,9 @@ constitution using a Telegram Bot!
 import argparse
 from uuid import uuid4
 from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent
-from telegram.ext import Updater, InlineQueryHandler
+from telegram.ext import Updater, InlineQueryHandler, MessageHandler, Filters
 import logging
+from html import escape
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -152,8 +153,22 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 
+def start(bot, update):
+    """Send a message when the command /start is issued."""
+    update.message.reply_text(
+        ('🇮🇹 <b>Benvenuto</b> <a href="tg://user?id={id}">{name}</a> su @CostituzioneBot!\n' +
+         'Puoi utilizzarmi usando l\'<b>Inline mode</b> offerta da ' +
+         '<i>Telegram</i> e digitando il <b>numero</b> dell\'articolo o della transitoria che stai cercando!').format(
+             id=update.message.from_user.id,
+             name=escape(update.message.from_user.first_name)
+        ),
+        parse_mode='HTML'
+    )
+
+
 updater = Updater(parsed_arguments.token)
 dp = updater.dispatcher
+dp.add_handler(MessageHandler(Filters.all, start))
 dp.add_handler(InlineQueryHandler(inlinequery))
 dp.add_error_handler(error)
 updater.start_polling()
