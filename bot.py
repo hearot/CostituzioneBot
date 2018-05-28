@@ -25,9 +25,28 @@
 # SOFTWARE.
 
 """
-CostituzioneBot - Read the Italian constitution
-using a Telegram Bot!
+CostituzioneBot - Read the Italian
+constitution using a Telegram Bot!
 """
+
+import logging
+import argparse
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
+logger.info(__doc__.rstrip())
+
+parser = argparse.ArgumentParser(description=__doc__.rstrip())
+parser.add_argument('token',
+                    help='The Telegram bot token')
+parsed_arguments = parser.parse_args()
+
+if not parsed_arguments.token:
+    logger.error('No Bot Token found')
+
 
 articles = {}
 last_number, last_string = '', ''
@@ -69,15 +88,20 @@ def get_article(article: str) -> str:
     return final_string.rstrip()
 
 
+logger.info('Opening \'costituzione.txt\'')
 with open('costituzione.txt', 'r') as costituzione:
+    logger.info('Starting reading lines...')
     for riga in costituzione.readlines():
         if riga.startswith('ART. ') or riga.rstrip().replace('.', '') in transitorie:
             articles[last_number] = last_string[1:].rstrip()
+            logger.info('Added Article/Transitoria %s' % last_number)
             last_number = riga.replace('ART. ', '').replace('.', '').replace('\n', '').rstrip().rstrip('-')
             last_string = ''
         elif str(riga) != '':
             last_string += riga
 
+logger.info('Added Article/Transitoria XVIII')
 articles['XVIII'] = last_string
+logger.info('Finished creating Articles dictionary!')
 
 del last_number, last_string
