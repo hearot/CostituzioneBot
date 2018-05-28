@@ -29,8 +29,11 @@ CostituzioneBot - Read the Italian
 constitution using a Telegram Bot!
 """
 
-import logging
 import argparse
+from uuid import uuid4
+from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent
+from telegram.ext import Updater, InlineQueryHandler
+import logging
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -71,7 +74,6 @@ def get_article(article: str) -> str:
     completing_word = False
 
     for word in [line.strip() for line in article.split()]:
-        print(repr(word))
         if completing_word:
             current_string.append(complete_word + word)
             completing_word, complete_word = False, ''
@@ -87,13 +89,12 @@ def get_article(article: str) -> str:
 
     return final_string.rstrip()
 
-
 logger.info('Opening \'costituzione.txt\'')
 with open('costituzione.txt', 'r') as costituzione:
     logger.info('Starting reading lines...')
     for riga in costituzione.readlines():
         if riga.startswith('ART. ') or riga.rstrip().replace('.', '') in transitorie:
-            articles[last_number] = last_string[1:].rstrip()
+            articles[last_number] = get_article(last_string[1:].rstrip())
             logger.info('Added Article/Transitoria %s' % last_number)
             last_number = riga.replace('ART. ', '').replace('.', '').replace('\n', '').rstrip().rstrip('-')
             last_string = ''
@@ -101,7 +102,59 @@ with open('costituzione.txt', 'r') as costituzione:
             last_string += riga
 
 logger.info('Added Article/Transitoria XVIII')
-articles['XVIII'] = last_string
+articles['XVIII'] = get_article(last_string)
 logger.info('Finished creating Articles dictionary!')
 
 del last_number, last_string
+
+
+def inlinequery(bot, update):
+    global articles
+
+    query = update.inline_query.query
+
+    if query in articles and not query == '':
+        try:
+            int(query)
+            title = '📘 Articolo ' + query
+        except ValueError:
+            title = '📒 Transitoria ' + query
+
+        result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + get_article(articles[query])
+
+        results = [
+            InlineQueryResultArticle(
+                id=uuid4(),
+                title=title,
+                input_message_content=InputTextMessageContent(
+                    result,
+                    parse_mode=ParseMode.HTML
+                )
+            )
+        ]
+    else:
+        results = [
+            InlineQueryResultArticle(
+                id=uuid4(),
+                title="❗️ Non trovato!",
+                input_message_content=InputTextMessageContent(
+                    '🇮🇹 <b>Viva</b> l\'<b>Italia</b>!',
+                    parse_mode=ParseMode.HTML
+                )
+            )
+        ]
+
+    update.inline_query.answer(results)
+
+
+def error(bot, update, error):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, error)
+
+
+updater = Updater(parsed_arguments.token)
+dp = updater.dispatcher
+dp.add_handler(InlineQueryHandler(inlinequery))
+dp.add_error_handler(error)
+updater.start_polling()
+updater.idle()
