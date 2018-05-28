@@ -90,6 +90,7 @@ def get_article(article: str) -> str:
 
     return final_string.rstrip()
 
+
 logger.info('Opening \'costituzione.txt\'')
 with open('costituzione.txt', 'r') as costituzione:
     logger.info('Starting reading lines...')
