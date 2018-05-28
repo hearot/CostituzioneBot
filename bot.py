@@ -111,15 +111,14 @@ del last_number, last_string
 
 
 def inlinequery(bot, update):
-    global articles
+    global articles, transitorie
 
     query = update.inline_query.query
 
     if query in articles and not query == '':
-        try:
-            int(query)
+        if not query in transitorie:
             title = '📘 Articolo ' + query
-        except ValueError:
+        else:
             title = '📒 Transitoria ' + query
 
         result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + get_article(articles[query])
