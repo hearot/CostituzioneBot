@@ -92,7 +92,7 @@ def get_article(article: str) -> str:
 
 
 logger.info('Opening \'costituzione.txt\'')
-with open('costituzione.txt', 'r') as costituzione:
+with open('costituzione.txt', 'r', encoding='utf8') as costituzione:
     logger.info('Starting reading lines...')
     for riga in costituzione.readlines():
         if riga.startswith('ART. ') or riga.rstrip().replace('.', '') in transitorie:
