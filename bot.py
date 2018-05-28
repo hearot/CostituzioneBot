@@ -121,7 +121,12 @@ def inlinequery(bot, update):
         else:
             title = '📒 Transitoria ' + query
 
-        result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + get_article(articles[query])
+        try:
+            articles[query + 'B']
+            result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + get_article(articles[query]) + \
+                     "\n\n🇮🇹 <b>Continua</b> su <code>" + query + "B</code>"
+        except KeyError:
+            result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + get_article(articles[query])
 
         results = [
             InlineQueryResultArticle(
