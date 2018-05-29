@@ -127,9 +127,9 @@ del last_number, last_string
 def inlinequery(bot, update):
     global articles, transitorie
 
-    query = update.inline_query.query
+    query = str(update.inline_query.query).lower().replace('articolo', '').replace('transitoria').strip().upper()
 
-    if str(query).upper() in articles and not query == '':
+    if query in articles and not query == '':
         if not query in transitorie:
             title = '📘 Articolo ' + query
         else:
