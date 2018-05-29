@@ -129,7 +129,7 @@ def inlinequery(bot, update):
 
     query = update.inline_query.query
 
-    if query in articles and not query == '':
+    if str(query).upper() in articles and not query == '':
         if not query in transitorie:
             title = '📘 Articolo ' + query
         else:
