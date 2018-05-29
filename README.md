@@ -1,9 +1,9 @@
 # [CostituzioneBot](https://telegram.me/CostituzioneBot)
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE) [![License: GPL v3](https://img.shields.io/badge/Dev-%20@hearot-blue.svg)](https://telegram.me/hearot)
 
 Telegram Bot that allows you to search *Articles* or *Transitorie* of the **Italian constitution**.
-You can get more information on [WikiPedia](https://en.wikipedia.org/wiki/Constitution_of_Italy)
+You can get more information on [Wikipedia](https://en.wikipedia.org/wiki/Constitution_of_Italy)
 
 To run the bot yourself, you will need:
 - Python (tested with 3.6)

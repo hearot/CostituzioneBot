@@ -65,7 +65,6 @@ keyboard = InlineKeyboardMarkup(
     ]
 )
 
-
 articles = {}
 last_number, last_string = '', ''
 transitorie = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII',
