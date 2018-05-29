@@ -38,8 +38,9 @@ import logging
 from html import escape
 import sys
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -108,10 +109,17 @@ logger.info('Opening \'costituzione.txt\'')
 with open('costituzione.txt', 'r', encoding='utf8') as costituzione:
     logger.info('Starting reading lines...')
     for riga in costituzione.readlines():
-        if riga.startswith('ART. ') or riga.rstrip().replace('.', '') in transitorie:
+        if riga.startswith('ART. ') or riga.rstrip().replace(
+                '.', '') in transitorie:
             articles[last_number] = get_article(last_string[1:].rstrip())
             logger.info('Added Article/Transitoria %s' % last_number)
-            last_number = riga.replace('ART. ', '').replace('.', '').replace('\n', '').rstrip().rstrip('-')
+            last_number = riga.replace(
+                'ART. ',
+                '').replace(
+                '.',
+                '').replace(
+                '\n',
+                '').rstrip().rstrip('-')
             last_string = ''
         elif str(riga) != '':
             last_string += riga
@@ -126,20 +134,26 @@ del last_number, last_string
 def inlinequery(bot, update):
     global articles, transitorie
 
-    query = str(update.inline_query.query).lower().replace('articolo', '').replace('transitoria', '').strip().upper()
+    query = str(
+        update.inline_query.query).lower().replace(
+        'articolo',
+        '').replace(
+            'transitoria',
+        '').strip().upper()
 
     if query in articles and not query == '':
-        if not query in transitorie:
+        if query not in transitorie:
             title = '📘 Articolo ' + query
         else:
             title = '📒 Transitoria ' + query
 
         try:
             articles[query + 'B']
-            result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + get_article(articles[query]) + \
-                     "\n\n🇮🇹 <b>Continua</b> su <code>" + query + "B</code>"
+            result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + \
+                get_article(articles[query]) + "\n\n🇮🇹 <b>Continua</b> su <code>" + query + "B</code>"
         except KeyError:
-            result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + get_article(articles[query])
+            result = "🇮🇹 <b>" + title + "</b> della <i>Costituzione Italiana</i>\n\n" + \
+                get_article(articles[query])
 
         results = [
             InlineQueryResultArticle(
@@ -179,12 +193,11 @@ def start(bot, update):
         ('🇮🇹 <b>Benvenuto</b> <a href="tg://user?id={id}">{name}</a> su @CostituzioneBot!\n' +
          'Puoi utilizzarmi usando l\'<b>Inline mode</b> offerta da ' +
          '<i>Telegram</i> e digitando il <b>numero</b> dell\'articolo o della transitoria che stai cercando!').format(
-             id=update.message.from_user.id,
-             name=escape(update.message.from_user.first_name)
-        ),
+            id=update.message.from_user.id,
+            name=escape(
+                update.message.from_user.first_name)),
         parse_mode='HTML',
-        reply_markup=keyboard
-    )
+        reply_markup=keyboard)
 
 
 updater = Updater(parsed_arguments.token)
