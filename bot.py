@@ -33,6 +33,7 @@ import argparse
 from uuid import uuid4
 from telegram import InlineQueryResultArticle, ParseMode, InputTextMessageContent
 from telegram.ext import Updater, InlineQueryHandler, MessageHandler, Filters
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 import logging
 from html import escape
 
@@ -50,6 +51,17 @@ parsed_arguments = parser.parse_args()
 
 if not parsed_arguments.token:
     logger.error('No Bot Token found')
+
+keyboard = InlineKeyboardMarkup(
+    [
+        [
+            InlineKeyboardButton(
+                '📚 Inizia!',
+                switch_inline_query_current_chat='1'
+            )
+        ]
+    ]
+)
 
 
 articles = {}
@@ -160,6 +172,8 @@ def error(bot, update, error):
 
 def start(bot, update):
     """Send a message when the command /start is issued."""
+    global keyboard
+
     update.message.reply_text(
         ('🇮🇹 <b>Benvenuto</b> <a href="tg://user?id={id}">{name}</a> su @CostituzioneBot!\n' +
          'Puoi utilizzarmi usando l\'<b>Inline mode</b> offerta da ' +
@@ -167,7 +181,8 @@ def start(bot, update):
              id=update.message.from_user.id,
              name=escape(update.message.from_user.first_name)
         ),
-        parse_mode='HTML'
+        parse_mode='HTML',
+        reply_markup=keyboard
     )
 
 
