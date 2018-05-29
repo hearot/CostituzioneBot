@@ -36,6 +36,7 @@ from telegram.ext import Updater, InlineQueryHandler, MessageHandler, Filters
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 import logging
 from html import escape
+import sys
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -51,6 +52,7 @@ parsed_arguments = parser.parse_args()
 
 if not parsed_arguments.token:
     logger.error('No Bot Token found')
+    sys.exit(1)
 
 keyboard = InlineKeyboardMarkup(
     [
