@@ -196,7 +196,7 @@ def start(bot, update):
     global keyboard
 
     update.message.reply_text(
-        ('🇮🇹 <b>Benvenuto</b> <a href="tg://user?id={id}">{name}</a>' +
+        ('🇮🇹 <b>Benvenuto</b> <a href="tg://user?id={id}">{name}</a> ' +
          "su @CostituzioneBot!\n" +
          "Puoi utilizzarmi usando l'<b>Inline mode</b> offerta da " +
          "<i>Telegram</i> e digitando il <b>numero</b> dell'articolo " +
