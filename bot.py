@@ -3,7 +3,7 @@
 
 # This file is a part of CostituzioneBot
 #
-# Copyright (c) 2017 The CostituzioneBot Authors (see AUTHORS)
+# Copyright (c) 2019 The CostituzioneBot Authors (see AUTHORS)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,14 +30,15 @@ constitution using a Telegram Bot!
 """
 
 import argparse
-from uuid import uuid4
+import logging
+import re
+import ujson as json
+from html import escape
+
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram import (InlineQueryResultArticle, ParseMode,
                       InputTextMessageContent)
 from telegram.ext import Updater, InlineQueryHandler, MessageHandler, Filters
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-import logging
-from html import escape
-import sys
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -47,154 +48,58 @@ logger = logging.getLogger(__name__)
 
 logger.info(__doc__.rstrip())
 
-parser = argparse.ArgumentParser(description=__doc__.rstrip())
-parser.add_argument("token", help="The Telegram bot token")
-parsed_arguments = parser.parse_args()
-
-if not parsed_arguments.token:
-    logger.error("No Bot Token found")
-    sys.exit(1)
-
 keyboard = InlineKeyboardMarkup(
-    [[InlineKeyboardButton("📚 Inizia!", switch_inline_query_current_chat="1")]]
+    [[InlineKeyboardButton("📚 Inizia!", switch_inline_query_current_chat="Articolo 1")]]
 )
 
-articles = {}
-last_number, last_string = "", ""
-transitorie = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
-               'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII']
+with open("costituzione.json", "r") as file:
+    constitution = json.load(file)
 
 
-def get_article(article: str) -> str:
-    """It adjusts the given line
-    to create the final string.
-    It deletes useless space and it sums
-    words split in two lines.
+def inline_query(_, update: Update):
+    """Retrieve an article using the user's inline query, then send it"""
+    number = re.search(r'\d+[B]?', update.inline_query.query)
 
-    Args:
-        article (str): The given article you would like to adjust
-
-    Returns:
-        str: The adjusted string
-    """
-
-    final_string, current_string, complete_word = "", [], ""
-    completing_word = False
-
-    for word in [line.strip() for line in article.split()]:
-        if completing_word:
-            current_string.append(complete_word + word)
-            completing_word, complete_word = False, ""
-        elif word.endswith("-"):
-            completing_word = True
-            complete_word = word.replace("-", "")
-        elif (
-            not word.endswith(".") and not word.endswith(";") and
-            not word.endswith(":")
-        ) or word == "n.":
-            current_string.append(word)
-        else:
-            current_string.append(word)
-            final_string += " ".join(current_string) + "\n"
-            current_string.clear()
-
-    return final_string.rstrip()
-
-
-logger.info("Opening 'costituzione.txt'")
-with open("costituzione.txt", "r", encoding="utf8") as costituzione:
-    logger.info("Starting reading lines...")
-    for riga in costituzione.readlines():
-        if riga.startswith("ART. ") or riga.rstrip().replace(
-                ".", "") in transitorie:
-            articles[last_number] = get_article(last_string[1:].rstrip())
-            logger.info("Added Article/Transitoria %s" % last_number)
-            last_number = (
-                riga.replace("ART. ", "")
-                .replace(".", "")
-                .replace("\n", "")
-                .rstrip()
-                .rstrip("-")
-            )
-            last_string = ""
-        elif str(riga) != "":
-            last_string += riga
-
-logger.info("Added Article/Transitoria XVIII")
-articles["XVIII"] = get_article(last_string)
-logger.info("Finished creating Articles dictionary!")
-
-del last_number, last_string
-
-
-def inlinequery(bot, update):
-    global articles, transitorie
-
-    query = (
-        str(update.inline_query.query)
-        .lower()
-        .replace("articolo", "")
-        .replace("transitoria", "")
-        .strip()
-        .upper()
-    )
-
-    if query in articles and not query == "":
-        if query not in transitorie:
-            title = "📘 Articolo " + query
-        else:
-            title = "📒 Transitoria " + query
-
-        try:
-            articles[query + "B"]
-            result = (
-                "🇮🇹 <b>" +
-                title +
-                "</b> della <i>Costituzione Italiana</i>\n\n" +
-                get_article(articles[query]) +
-                "\n\n🇮🇹 <b>Continua</b> su <code>" +
-                query +
-                "B</code>"
-            )
-        except KeyError:
-            result = (
-                "🇮🇹 <b>" +
-                title +
-                "</b> della <i>Costituzione Italiana</i>\n\n" +
-                get_article(articles[query])
-            )
-
-        results = [
+    if number and number.group() in constitution:
+        update.inline_query.answer([
             InlineQueryResultArticle(
-                id=uuid4(),
-                title=title,
+                id=number.group(),
+                title="📘 Articolo " + number.group(),
                 input_message_content=InputTextMessageContent(
-                    result, parse_mode=ParseMode.HTML
-                ),
-            )
-        ]
-    else:
-        results = [
+                    (
+                            "🇮🇹 <b>📘 Articolo " + number.group() +
+                            "</b> della <i>Costituzione Italiana</i>\n\n" + constitution[number.group()] +
+                            (
+                                ("\n\n🇮🇹 <b>Continua</b> su <code>" +
+                                 number.group() + "B</code>")
+                                if number.group() + 'B' in constitution else ''
+                            )
+                    ), parse_mode=ParseMode.HTML))])
+
+    roman = re.search(r'M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$', update.inline_query.query)
+
+    if roman and roman.group() in constitution:
+        update.inline_query.answer([
             InlineQueryResultArticle(
-                id=uuid4(),
-                title="❗️ Non trovato!",
+                id=roman.group(),
+                title="📒 Transitoria " + roman.group(),
                 input_message_content=InputTextMessageContent(
-                    "🇮🇹 <b>Viva</b> l'<b>Italia</b>!",
-                    parse_mode=ParseMode.HTML),
-            )]
+                    (
+                            "🇮🇹 <b>📒 Transitoria " + roman.group() +
+                            "</b> della <i>Costituzione Italiana</i>\n\n" + constitution[roman.group()]
+                    ), parse_mode=ParseMode.HTML))])
 
-    update.inline_query.answer(results)
+    update.inline_query.answer([
+        InlineQueryResultArticle(
+            id="not_found",
+            title="❗️ Non trovato!",
+            input_message_content=InputTextMessageContent(
+                "🇮🇹 <b>Viva</b> l'<b>Italia</b>!",
+                parse_mode=ParseMode.HTML))])
 
 
-def error(bot, update, error):
-    """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, error)
-
-
-def start(bot, update):
+def start(_, update: Update):
     """Send a message when the command /start is issued."""
-    global keyboard
-
     update.message.reply_text(
         ('🇮🇹 <b>Benvenuto</b> <a href="tg://user?id={id}">{name}</a> ' +
          "su @CostituzioneBot!\n" +
@@ -206,14 +111,22 @@ def start(bot, update):
                 update.message.from_user.first_name),
         ),
         parse_mode="HTML",
-        reply_markup=keyboard,
-    )
+        reply_markup=keyboard)
 
 
-updater = Updater(parsed_arguments.token)
-dp = updater.dispatcher
-dp.add_handler(MessageHandler(Filters.all, start))
-dp.add_handler(InlineQueryHandler(inlinequery))
-dp.add_error_handler(error)
-updater.start_polling()
-updater.idle()
+def main():
+    """Start the bot & the program"""
+    parser = argparse.ArgumentParser(description=__doc__.rstrip())
+    parser.add_argument("-t", "--token", help="The Telegram bot token",
+                        required=True, type=str)
+    parsed_arguments = parser.parse_args()
+
+    updater = Updater(parsed_arguments.token)
+    updater.dispatcher.add_handler(MessageHandler(Filters.all, start))
+    updater.dispatcher.add_handler(InlineQueryHandler(inline_query))
+    updater.start_polling()
+    updater.idle()
+
+
+if __name__ == '__main__':
+    main()
