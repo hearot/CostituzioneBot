@@ -46,8 +46,6 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-logger.info(__doc__.rstrip())
-
 keyboard = InlineKeyboardMarkup(
     [[InlineKeyboardButton("📚 Inizia!", switch_inline_query_current_chat="Articolo 1")]]
 )
@@ -120,6 +118,8 @@ def main():
     parser.add_argument("-t", "--token", help="The Telegram bot token",
                         required=True, type=str)
     parsed_arguments = parser.parse_args()
+
+    logger.info(__doc__.rstrip())
 
     updater = Updater(parsed_arguments.token)
     updater.dispatcher.add_handler(MessageHandler(Filters.all, start))
